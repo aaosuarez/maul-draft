@@ -1,25 +1,23 @@
 import React, { useState } from "react";
 import { v4 as uuid } from "uuid";
 import monstersJSON from "./monsters.json";
+import { CreatureListItem } from "./components/CreatureListItem";
+import { getCreatureXPCost, MAX_XP } from "./Utils";
 
-const CREATURE_LEVEL_TO_XP = new Map([
-  [-4, 10],
-  [-3, 15],
-  [-2, 20],
-  [-1, 30],
-  [0, 40],
-  [1, 60],
-  [2, 80],
-  [3, 120],
-  [4, 160],
-]);
-
-const getXPForLevel = (
-  creatureLevel: number,
-  partyLevel: number = 1
-): number => {
-  return CREATURE_LEVEL_TO_XP.get(creatureLevel - partyLevel) ?? 0;
+export type CreatureType = {
+  level: number;
+  name: string;
+  link?: string;
+  traits?: string[];
 };
+
+interface TeamCreatureType extends CreatureType {
+  id: string;
+}
+
+const creatures = monstersJSON.monsters.filter(
+  (c) => c.level < 3 && c.source?.includes("Bestiary pg.")
+);
 
 const XPCounter = ({ value }: { value: number }) => {
   return (
@@ -34,145 +32,14 @@ const XPCounter = ({ value }: { value: number }) => {
   );
 };
 
-enum TraitType {
-  Alignment,
-  Size,
-  Other,
-}
-
-const Trait = ({ type, ...props }: any) => {
-  let backgroundColor = "";
-  switch (type) {
-    case TraitType.Alignment: {
-      backgroundColor = "#4287f5";
-      break;
-    }
-    case TraitType.Size: {
-      backgroundColor = "#478c42";
-      break;
-    }
-    default: {
-      backgroundColor = "#522e2c";
-    }
-  }
-  return (
-    <span
-      {...props}
-      className={"bg-red-500 border text-white p-1 text-xs font-bold"}
-      style={{ borderColor: "#d8c483", backgroundColor }}
-    />
-  );
-};
-
-const alignments = ["lg", "ng", "cg", "ln", "n", "cn", "le", "ne", "ce"];
-
-const sizes = ["tiny", "small", "medium", "large", "huge", "gargantuan"];
-
-function getTraitType(traitName: string): TraitType {
-  const lowerCaseName = traitName.toLowerCase();
-  if (alignments.includes(lowerCaseName)) {
-    return TraitType.Alignment;
-  }
-  if (sizes.includes(lowerCaseName)) {
-    return TraitType.Size;
-  }
-  return TraitType.Other;
-}
-
-const Creature = ({
-  creature,
-  withCR = true,
-  onAdd = undefined,
-  onDelete = undefined,
-  isDisabled = false,
-}: {
-  creature: CreatureType;
-  withCR?: boolean;
-  onAdd?: (creature: CreatureType) => unknown;
-  onDelete?: (creature: CreatureType) => unknown;
-  isDisabled?: boolean;
-}) => {
-  const { name, level } = creature;
-  const xp = getXPForLevel(level);
-  const backgroundColor = isDisabled
-    ? "bg-gray-300"
-    : "bg-green-500 hover:bg-green-600";
-  return (
-    <div className={"flex justify-between p-2 bg-gray-100 hover:bg-gray-200"}>
-      <div>
-        <div className={"inline-block mr-2"}>{name}</div>
-        <div className={"inline-block mr-2"}>
-          {creature.traits?.map((trait) => (
-            <Trait key={trait} type={getTraitType(trait)}>
-              {trait}
-            </Trait>
-          ))}
-        </div>
-        {creature.link != null && (
-          <a
-            className={"text-xs underline text-blue-500"}
-            href={creature.link}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            SRC
-          </a>
-        )}
-      </div>
-
-      <div>
-        <span>{xp} XP</span>
-        {withCR && <span className={"text-sm ml-2"}>CR {level}</span>}
-        {onAdd && (
-          <button
-            disabled={isDisabled}
-            className={`ml-2 w-6 h-6 rounded-full text-center shadow hover:shadow-lg focus:outline-none ${backgroundColor}`}
-            onClick={() => onAdd(creature)}
-          >
-            +
-          </button>
-        )}
-        {onDelete && (
-          <button
-            disabled={isDisabled}
-            className={`ml-2 bg-red-500 hover:bg-red-600 w-6 h-6 rounded-full text-center shadow hover:shadow-lg focus:outline-none ${
-              isDisabled && "bg-gray-500 hover:bg-gray-500"
-            }`}
-            onClick={() => onDelete(creature)}
-          >
-            -
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-
-type CreatureType = {
-  level: number;
-  name: string;
-  link?: string;
-  traits?: string[];
-};
-
-interface TeamCreatureType extends CreatureType {
-  id: string;
-}
-
-const MAX_XP = 120;
-
-const creatures = monstersJSON.monsters.filter(
-  (c) => c.level < 3 && c.source?.includes("Bestiary pg.")
-);
-
 function App() {
   const [team, setTeam] = useState<TeamCreatureType[]>([]);
   const currentXP = team
-    .map((creature) => getXPForLevel(creature.level))
+    .map((creature) => getCreatureXPCost(creature.level))
     .reduce((result, value) => result + value, 0);
 
   const onAddTeamCreature = (creature: CreatureType) => {
-    const creatureXP = getXPForLevel(creature.level);
+    const creatureXP = getCreatureXPCost(creature.level);
     if (currentXP + creatureXP > MAX_XP) {
       return;
     }
@@ -202,10 +69,12 @@ function App() {
         <p>Select Creatures</p>
         <div>
           {creatures.map((creature) => (
-            <Creature
+            <CreatureListItem
               key={creature.name}
               creature={creature}
-              isDisabled={getXPForLevel(creature.level) + currentXP > MAX_XP}
+              isDisabled={
+                getCreatureXPCost(creature.level) + currentXP > MAX_XP
+              }
               onAdd={onAddTeamCreature}
             />
           ))}
@@ -220,7 +89,7 @@ function App() {
           <div>
             {team.length > 0 ? (
               team.map((creature) => (
-                <Creature
+                <CreatureListItem
                   key={creature.id}
                   creature={creature}
                   withCR={false}
