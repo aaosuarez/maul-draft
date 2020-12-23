@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { v4 as uuid } from "uuid";
-import monstersJSON from "./monsters.json";
-import { CreatureListItem } from "./components/CreatureListItem";
-import { getCreatureXPCost, MAX_XP } from "./Utils";
+import React, {useState} from "react";
+import {v4 as uuid} from "uuid";
+import {CreatureListItem} from "./components/CreatureListItem";
+import {getCreatureXPCost, MAX_XP} from "./Utils";
+import {CreatureTable, DraftCreatureButton} from "./CreatureTable";
 
 export type CreatureType = {
   level: number;
@@ -15,11 +15,7 @@ interface TeamCreatureType extends CreatureType {
   id: string;
 }
 
-const creatures = monstersJSON.monsters.filter(
-  (c) => c.level < 3 && c.source?.includes("Bestiary pg.")
-);
-
-const XPCounter = ({ value }: { value: number }) => {
+const XPCounter = ({value}: { value: number }) => {
   return (
     <div className={"inline-block"}>
       <div className={"text-sm uppercase text-sm font-bold text-gray-800"}>
@@ -32,13 +28,18 @@ const XPCounter = ({ value }: { value: number }) => {
   );
 };
 
-function App() {
-  const [team, setTeam] = useState<TeamCreatureType[]>([]);
-  const currentXP = team
+export function getXPTotal(creatures: CreatureType[]): number {
+  return creatures
     .map((creature) => getCreatureXPCost(creature.level))
     .reduce((result, value) => result + value, 0);
+}
 
-  const onAddTeamCreature = (creature: CreatureType) => {
+function App() {
+  const [team, setTeam] = useState<TeamCreatureType[]>([]);
+  const currentXP = getXPTotal(team)
+
+  const onAddTeamCreature = React.useCallback((creature: CreatureType) => {
+    const currentXP = getXPTotal(team)
     const creatureXP = getCreatureXPCost(creature.level);
     if (currentXP + creatureXP > MAX_XP) {
       return;
@@ -49,7 +50,7 @@ function App() {
       id: uuid(),
     });
     setTeam(newTeam);
-  };
+  }, [team]);
 
   const onRemoveTeamCreature = (creature: CreatureType) => {
     const creatureToRemoveIndex = team.findIndex(
@@ -66,23 +67,11 @@ function App() {
   return (
     <div className={"container mx-auto grid grid-cols-3 gap-4 m-4"}>
       <div className={"col-span-2"}>
-        <p>Select Creatures</p>
-        <div>
-          {creatures.map((creature) => (
-            <CreatureListItem
-              key={creature.name}
-              creature={creature}
-              isDisabled={
-                getCreatureXPCost(creature.level) + currentXP > MAX_XP
-              }
-              onAdd={onAddTeamCreature}
-            />
-          ))}
-        </div>
+        <CreatureTable onAdd={onAddTeamCreature} currentXP={currentXP}/>
       </div>
       <div>
         <div className={"sticky top-4 p-4 bg-gray-100 rounded"}>
-          <XPCounter value={MAX_XP - currentXP} />
+          <XPCounter value={MAX_XP - currentXP}/>
           <div className={"mt-8 uppercase text-sm font-bold text-gray-800"}>
             Your Team
           </div>
@@ -92,7 +81,6 @@ function App() {
                 <CreatureListItem
                   key={creature.id}
                   creature={creature}
-                  withCR={false}
                   onDelete={onRemoveTeamCreature}
                 />
               ))

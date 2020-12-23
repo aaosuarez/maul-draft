@@ -1,5 +1,6 @@
-export const ALIGNMENTS = ["lg", "ng", "cg", "ln", "n", "cn", "le", "ne", "ce"];
+export const ALIGNMENTS = ["lg", "ng", "cg", "ln", "n", "cn", "le", "ne", "ce", "any"];
 export const SIZES = ["tiny", "small", "medium", "large", "huge", "gargantuan"];
+export const RARITIES = ["uncommon", "rare"];
 export const MAX_XP = 120;
 const CREATURE_LEVEL_DIFFERENCE_TO_XP = new Map([
   [-4, 10],
