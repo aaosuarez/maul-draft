@@ -6,7 +6,7 @@ import {CreatureType} from "./App";
 import {getTraitType, Trait} from "./components/Trait";
 
 const creatures = monstersJSON.monsters.filter(
-  (c) => c.level < 3 && c.source?.includes("Bestiary pg.")
+  (c) => c.level < 4 && c.source?.includes("Bestiary pg.") && !c.traits.includes("Uncommon")
 );
 
 export const DraftCreatureButton = ({

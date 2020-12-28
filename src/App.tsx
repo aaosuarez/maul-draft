@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {v4 as uuid} from "uuid";
 import {CreatureListItem} from "./components/CreatureListItem";
 import {getCreatureXPCost, MAX_XP} from "./Utils";
-import {CreatureTable, DraftCreatureButton} from "./CreatureTable";
+import {CreatureTable} from "./CreatureTable";
 
 export type CreatureType = {
   level: number;

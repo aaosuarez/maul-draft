@@ -15,12 +15,12 @@ const TraitBackgrounds = {
   [TraitType.Rarity]: "#c45500"
 }
 
-const TraitsByType: Record<TraitType, string[]> = {
-  [TraitType.Default]: [],
-  [TraitType.Alignment]: ALIGNMENTS,
-  [TraitType.Rarity]: RARITIES,
-  [TraitType.Size]: SIZES
-}
+// const TraitsByType: Record<TraitType, string[]> = {
+//   [TraitType.Default]: [],
+//   [TraitType.Alignment]: ALIGNMENTS,
+//   [TraitType.Rarity]: RARITIES,
+//   [TraitType.Size]: SIZES
+// }
 
 // TODO: use [TraitsByType] record here
 export function getTraitType(traitName: string): TraitType {
